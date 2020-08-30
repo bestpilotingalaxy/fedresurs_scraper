@@ -1,20 +1,26 @@
 import json
 
 import requests
-from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 
-from .config import HEADERS
+from config import HEADERS
 
-
-keyword = "РОМАШКА"
 
 headers = HEADERS
+
+gecodriver_path = '/home/engi/PycharmProjects/fedresurs_scraper/WebDriver/geckodriver'
+
+
+def set_driver_options():
+    options = Options()
+    options.headless = True
+    return options
 
 
 def collect_guids(keyword, headers):
     """"""
     url = 'https://fedresurs.ru/backend/companies/search'
-    guid_list = []
     json_body = {
         "entitySearchFilter": {
             "pageSize": 99999,
@@ -32,13 +38,10 @@ def collect_guids(keyword, headers):
         # не меняет кол во найденых юр.лиц в примере с РОМАШКА
         'isTradePlace': False,
     }
+    response = requests.post(url=url, headers=headers,  json=json_body)
+    companies = response.json()['pageData']
+    guid_list = [i['guid'] for i in companies]
 
-    resp = requests.post(url=url, headers=headers,  json=json_body)
-    companies = resp.json()['pageData']
-    # guid_list = tuple(i['guid'] for i in companies)
-    for company_data in companies:
-        guid = company_data['guid']
-        guid_list.append(guid)
     return guid_list
 
 
@@ -46,7 +49,7 @@ def collect_bankrupts_messages(guid_list, headers):
     """"""
     url = 'https://fedresurs.ru/backend/companies/publications'
 
-    message_guids = []
+    messages = []
     for guid in guid_list:
         params = {
             'guid': guid,
@@ -64,25 +67,37 @@ def collect_bankrupts_messages(guid_list, headers):
         publications = json.loads(publications.content)
         try:
             message = publications['pageData'][0]
-            message_guids.append(message['guid'])
+            messages.append(message)
         except IndexError:
             pass
-    return message_guids
+
+    return messages
 
 
-data = collect_guids(keyword, headers)
-print(data, len(data), sep='\n')
-message_guids = collect_bankrupts_messages(data, headers)
-print(message_guids)
+def parse_messages_data(keyword):
+    """"""
+    bankrupts_guids = collect_guids(keyword, headers)
+    messages = collect_bankrupts_messages(bankrupts_guids, headers)
+    result = []
+    driver = webdriver.Firefox(
+        executable_path=gecodriver_path,
+        options=set_driver_options()
+    )
+    for message in messages:
+        guid = message['guid']
+        url = f'https://bankrot.fedresurs.ru/MessageWindow.aspx?ID={guid}'
+        driver.get(url)
+        driver.refresh()
+        text = driver.find_element_by_class_name('msg').text
+        text = text.replace('\n', '')
+        data_object = {
+            'guid': guid,
+            'text': text,
+            'date': message['datePublish'],
+            'url': url
+            }
+        result.append(data_object)
+
+    return result
 
 
-link = 'http://bankrot.fedresurs.ru/MessageWindow.aspx?ID=274C523EEF86FDBB20445E9620774983&attempt=1'
-page = requests.get(url=link)
-soup = BeautifulSoup(page.content, 'html.parser')
-print(soup.prettify())
-
-# TODO: Извлечь из сообщения:
-#           1. GUID
-#           2. Текст сообщения
-#           3. Дату публикации
-#           4. URL

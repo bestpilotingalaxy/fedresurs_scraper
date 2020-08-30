@@ -1,9 +1,9 @@
-from .config import DATABASE_SETTINGS
+from config import DATABASE_SETTINGS
 
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker
 
 USER = DATABASE_SETTINGS['user']
 PASSWORD = DATABASE_SETTINGS['password']
