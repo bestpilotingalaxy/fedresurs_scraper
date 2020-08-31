@@ -9,7 +9,7 @@ from .config.config import HEADERS
 # Заголовки необходимые для запросов
 headers = HEADERS
 
-gecodriver_path = '/home/engi/PycharmProjects/app/service/WebDriver/geckodriver'
+gecodriver_path = '/parser/service/WebDriver/geckodriver'
 
 
 def set_driver_options():
