@@ -205,5 +205,6 @@ fabric.properties
 
 # enviroment
 venv
+env
 # dir with tests
 

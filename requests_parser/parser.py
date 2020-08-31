@@ -6,21 +6,28 @@ from selenium.webdriver.firefox.options import Options
 
 from config import HEADERS
 
-
+# Заголовки необходимые для запросов
 headers = HEADERS
 
-gecodriver_path = '/home/engi/PycharmProjects/fedresurs_scraper/WebDriver/geckodriver'
+gecodriver_path = '/home/engi/PycharmProjects/app/WebDriver/geckodriver'
 
 
 def set_driver_options():
+    """
+    headless параметр для драйвера
+    """
     options = Options()
     options.headless = True
     return options
 
 
-def collect_guids(keyword, headers):
-    """"""
+def collect_guids(keyword):
+    """
+    Функция для сбора guid листа фирм банкротов
+    """
     url = 'https://fedresurs.ru/backend/companies/search'
+
+    # Параметры фильтра, влияющие на подбор юр.лиц
     json_body = {
         "entitySearchFilter": {
             "pageSize": 99999,
@@ -28,30 +35,30 @@ def collect_guids(keyword, headers):
         },
         'onlyActive': False,
         'isCompany': False,
+        # Является ли фирма банкротом
         'isFirmBankrupt': True,
-        # не меняет кол во найденых юр.лиц в примере с РОМАШКА
-        'isFirmTradeOrg': False,
-        # не меняет кол во найденых юр.лиц в примере с РОМАШКА
-        'isSro': False,
-        # не меняет кол во найденых юр.лиц в примере с РОМАШКА
-        'isSroTradePlace': False,
-        # не меняет кол во найденых юр.лиц в примере с РОМАШКА
-        'isTradePlace': False,
+
     }
     response = requests.post(url=url, headers=headers,  json=json_body)
     companies = response.json()['pageData']
+
+    # Создание списка guid значений юр.лиц
     guid_list = [i['guid'] for i in companies]
 
     return guid_list
 
 
-def collect_bankrupts_messages(guid_list, headers):
-    """"""
+def collect_bankrupts_messages(guid_list):
+    """
+    Функция находит последнее по дате решение арбитражного суда
+    о банкротстве для каждого юр.лица из списка [guid_list],
+    если такое решение пристуствует
+    """
     url = 'https://fedresurs.ru/backend/companies/publications'
 
     messages = []
     for guid in guid_list:
-        params = {
+        json_body = {
             'guid': guid,
             'searchAmReport': False,
             'searchFirmBankruptMessage': True,
@@ -60,14 +67,17 @@ def collect_bankrupts_messages(guid_list, headers):
             'searchTradeOrgMessage': False,
             'pageSize': 99999,
             # Параметр влияет на подкатегорию банкротских сообщений
+            # "ArbitralDecree" - решения арбитражного суда
             'bankruptMessageType': 'ArbitralDecree',
         }
 
-        publications = requests.post(url, headers=headers, json=params)
-        publications = json.loads(publications.content)
+        response = requests.post(url, headers=headers, json=json_body)
+        publications = json.loads(response.content)
+
         try:
             message = publications['pageData'][0]
             messages.append(message)
+        # IndexError возникает если нет решения суда о банкротстве
         except IndexError:
             pass
 
@@ -75,10 +85,16 @@ def collect_bankrupts_messages(guid_list, headers):
 
 
 def parse_messages_data(keyword):
-    """"""
-    bankrupts_guids = collect_guids(keyword, headers)
-    messages = collect_bankrupts_messages(bankrupts_guids, headers)
+    """
+    Главная функция, последовательно вызывает две предыдущих,
+    итерируется по списку сообщений парся текст сообщения с помощью
+    веб-драйвера
+    """
+    bankrupts_guids = collect_guids(keyword)
+    messages = collect_bankrupts_messages(bankrupts_guids)
     result = []
+
+    # Обьект драйвера
     driver = webdriver.Firefox(
         executable_path=gecodriver_path,
         options=set_driver_options()
@@ -86,10 +102,16 @@ def parse_messages_data(keyword):
     for message in messages:
         guid = message['guid']
         url = f'https://bankrot.fedresurs.ru/MessageWindow.aspx?ID={guid}'
+
+        # Получение страницы + редирект
         driver.get(url)
         driver.refresh()
+
+        # Парсинг текста сообщения и сбор других данных
         text = driver.find_element_by_class_name('msg').text
         text = text.replace('\n', '')
+
+        # Формирование обьекта результата парсинга
         data_object = {
             'guid': guid,
             'text': text,
@@ -98,6 +120,8 @@ def parse_messages_data(keyword):
             }
         result.append(data_object)
 
+    # Проверка на пустой результат
+    if len(result) == 0:
+        return 'No messages found'
+
     return result
-
-
