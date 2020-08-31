@@ -4,12 +4,12 @@ import requests
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
-from config import HEADERS
+from .config.config import HEADERS
 
 # Заголовки необходимые для запросов
 headers = HEADERS
 
-gecodriver_path = '/home/engi/PycharmProjects/app/WebDriver/geckodriver'
+gecodriver_path = '/home/engi/PycharmProjects/app/service/WebDriver/geckodriver'
 
 
 def set_driver_options():

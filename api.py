@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 from rq import Queue
 from rq.job import Job
 
-from .parser import parse_messages_data
+from service.parser.scraper import parse_messages_data
 
 
 app = Flask(__name__)

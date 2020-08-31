@@ -1,4 +1,4 @@
-from config import DATABASE_SETTINGS
+from .config.config import DATABASE_SETTINGS
 
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy import create_engine
