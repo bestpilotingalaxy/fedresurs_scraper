@@ -208,3 +208,5 @@ venv
 env
 # dump
 *.rdb
+
+.vscode

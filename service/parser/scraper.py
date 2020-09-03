@@ -103,13 +103,17 @@ def parse_messages_data(keyword):
         guid = message['guid']
         url = f'https://bankrot.fedresurs.ru/MessageWindow.aspx?ID={guid}'
 
-        # Получение страницы + редирект
-        driver.get(url)
-        driver.refresh()
+        # Обработка исключений если страница недоступна или на ней нет текста
+        try:
+            # Получение страницы + редирект
+            driver.get(url)
+            driver.refresh()
 
-        # Парсинг текста сообщения и сбор других данных
-        text = driver.find_element_by_class_name('msg').text
-        text = text.replace('\n', '')
+            # Парсинг текста сообщения и сбор других данных
+            text = driver.find_element_by_class_name('msg').text
+            text = text.replace('\n', '')
+        except Exception:
+            continue
 
         # Формирование обьекта результата парсинга
         data_object = {

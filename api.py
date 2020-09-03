@@ -44,10 +44,7 @@ def get_task():
         # Проверка на наличие id задания в запросе
         if 'task_id' in request.json:
             task_id = request.json['task_id']
-
-        # Проверка на наличие таска
             job = Job.fetch(task_id, connection=r)
-            abort(400, 'No such task!')
 
         # Проверка статуса задания
             if job.get_status() == "finished":
@@ -60,7 +57,7 @@ def get_task():
 
     # Исключение когда введен неверный номер таска
     except NoSuchJobError:
-        abort(400, 'No such task!')
+        abort(404, 'No such task!')
 
 
 if __name__ == "__main__":
