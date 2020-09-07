@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "app"
+version = "0.1.0"
+description = ""
+authors = ["bestpilotingalaxy <egorlaptev98@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+selenium = "^3.141.0"
+flask = "^1.1.2"
+flask-sqlalchemy = "^2.4.4"
+redis = "^3.5.3"
+requests = "^2.24.0"
+rq = "^1.5.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

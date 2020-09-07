@@ -203,10 +203,15 @@ fabric.properties
 # Full .idea
 .idea
 
-# enviroment
-venv
-env
 # dump
 *.rdb
 
+# 
 .vscode
+
+# enviroment
+venv
+env
+*.lock
+.python-version
+
