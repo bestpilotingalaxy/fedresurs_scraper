@@ -5,25 +5,25 @@ from sqlalchemy.orm import sessionmaker
 
 from .config.config import DATABASE_SETTINGS
 
-# Настройки
+# DB settings
 USER = DATABASE_SETTINGS['user']
 PASSWORD = DATABASE_SETTINGS['password']
 DATABASE = DATABASE_SETTINGS['database']
 
-# Обьект подключения
+# Connection object
 engine = create_engine(
     f'postgresql+psycopg2://{USER}:{PASSWORD}@localhost:5432/{DATABASE}'
 )
 Base = declarative_base()
 
-# Сессия
+# Session obj
 Session = sessionmaker(bind=engine)
 session = Session()
 
 
 class BankruptMessage(Base):
     """
-    Обьект таблицы хранящей сообщения в БД
+    Table object for DB
     """
     __tablename__ = 'messages'
 

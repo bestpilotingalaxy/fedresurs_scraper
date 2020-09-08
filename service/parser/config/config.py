@@ -23,7 +23,7 @@ HEADERS = {
 # ------------------------------------------------------------------
 
 DATABASE_SETTINGS = {
-    'database': '',
-    'user': '',
-    'password': '',
+    'database': 'fedres',
+    'user': 'postgres',
+    'password': 'postgres',
 }
