@@ -18,28 +18,31 @@ r = redis.Redis(host='redis', port=6379)
 # queue object
 q = Queue(connection=r)
 
+# logging settings
 logging.basicConfig(
     filename='tasks.log',
     level=logging.DEBUG,
     format='%(asctime)s:%(name)s:%(message)s'
 )
+logger = logging.getLogger(__name__)
+
 
 
 @app.route('/task', methods=['POST'])
 def task():
     """
-    Контроллер который создает задание, ставит его в очередь
-    и возвращает id задания
+    Method checks request params, add task in queue and then
+    return task id as json.
     """
+    # Verify 'keyword' existance in request
     if 'keyword' in request.json:
-    # Проверка на наличие keyword в запросе
         keyword = request.json['keyword']
         job = q.enqueue(
             parse_messages_data,
             keyword,
             result_ttl=-1
         )
-        logging.debug(f'Added task {job.id} in queue; keyword={keyword}')
+        logger.debug(f'Added task {job.id} in queue; keyword={keyword}')        
         return jsonify({'task_id': job.id})
 
     else:
@@ -49,23 +52,23 @@ def task():
 @app.route('/result', methods=['POST'])
 def get_task():
     """
-    Контроллер который проверяет статус таска и возвращает
-    результат/статус
+    Method cheks 'task_id' in request, than cheks task status
+    and return result/status.
     """
     try:
-        # Проверка на наличие id задания в запросе
+        # Verify ID existance in request
         if 'task_id' in request.json:
             task_id = request.json['task_id']
             job = Job.fetch(task_id, connection=r)
 
-            # Проверка статуса задания
+            # Checks task status
             if job.get_status() == "finished":
-                logging.debug(f'Result of {job.id} task given away')
+                logger.debug(f'Result of {job.id} task given away')
                 return jsonify({job.id: job.result})
             
             else:
                 status = job.get_status()
-                logging.debug(
+                logger.debug(
                     f'Requested result of {job.id}. Task in {status} status'
                 )
                 return jsonify({'task_status': status})
@@ -73,7 +76,7 @@ def get_task():
         else:
             abort(400, 'Bad request! Send task_id as a json')
 
-    # Исключение когда введен неверный номер таска
+    # Handle exception when task is not exist
     except NoSuchJobError:
         abort(404, 'No such task!')
 
