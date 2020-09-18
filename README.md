@@ -38,44 +38,72 @@ b. показать результат - на вход guid задания, во
 
 _______________________________________________________
 
-# Установка и запуск:
+# Installation and launch:
 
-1. Клонировать репозиторий.
+1. Clone repo.
             
            
 2.           $ docker-compose up
 
 
-# Работа:
+# Endpoints:
   
-  API поддерживает два действия реализованные 'POST' HTTP запросами:
   
-    1. Создать задание по ключевому слову:
+    1. Create task:
+       HTTP 'POST' 0.0.0.0:5000/task
               
-                                    http://0.0.0.0:5000/task  json={'keyword': <keyword>}
+       json_body= {
+                    'keyword': <keyword>
+                  }
     
        
-       Возвращает json содержащий id задания в виде:
-              
-                                    {'task_id': <task_id>}
+       Response:
+                  {
+                    'task_id': <task_id>
+                  }
     
     
    --------------------------------------------------------------------------------------------- 
     
-    2. Получить результат или статус задания в очереди:
-              
-                                    http://0.0.0.0:5000/task  json={'task_id': <keyword>}
+    2. Get result or task status:
+       HTTP 'POST' 0.0.0.0:5000/result    
+       
+       json_body= {
+                    'task_id': <task_id>
+                  }
           
        
-       Возвращает json содержащий результат задания в виде:
+       Response cantains result in format:
        
-                                    {'task_id':[
-                                    
-                                        {'guid': <guid>, 'text': <text>, 'date': <date>, 'url': <url>},
-                                        
-                                                                .....,
-                                                                
-                                                                .....,
-                                                                
-                                               ]}                       
+                  {
+                    'task_id':
+                             [                                  
+                               {
+                                 'guid': <guid>,
+                                 'text': <text>,
+                                 'date': <date>,
+                                 'url': <url>
+                               },
+                               {
+                                  .......,
+                                  .......,
+                                  .......,
+                                  .......
+                               }                                                                                                                       
+                             ]
+                   }                       
        
+       or task status in format:
+                   
+                   {
+                     'task_status': <status>
+                   }
+
+
+Added logging of flask app(api.py) into "tasks.log" file in "flask" container.
+
+Log format:
+            
+            %(asctime)s:%(name)s: Added task {job.id} in queue; keyword={keyword}
+            %(asctime)s:%(name)s: Result of {job.id} task given away
+            %(asctime)s:%(name)s: Requested result of {job.id}. Task in {status} status
